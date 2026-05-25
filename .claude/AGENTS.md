@@ -9,9 +9,62 @@ Architecture: **Phone (MJPEG server) → TCP → Companion (decode/convert) → 
 
 - **CMake 3.20+** with **Conan 2.x** for third-party deps
 - C11 for platform-independent code, C++17 only where COM/WRL is required
-- Cross-compile from Linux to Windows: `cmake -B build/win11 -DCMAKE_TOOLCHAIN_FILE=.../windows-msvc-cross.amd64 -DWIN_SDK_ROOT=/mnt/data/windows-dev-debug -G Ninja`
-- `BUILD_IMPL_WINDOWS=ON` by default; `GVCAM_WITH_OPENCV=OFF`
 - libjpeg-turbo is **optional** (only for `gvcam_codec`); build works without it
+- `BUILD_IMPL_WINDOWS=ON` by default; `GVCAM_WITH_OPENCV=OFF`
+- All commands must be run from the **project root**
+
+### `conan build` — local dev (→ `output/`)
+
+```bash
+# Native Linux
+conan build . -s build_type=Release
+
+# Cross-compile Linux → Windows
+export WIN_SDK_ROOT=/mnt/data/windows-dev-debug
+conan build . -pr:h toolchain/windows-x64-cross.profile -pr:b default
+```
+
+Artifacts land in `output/`:
+```
+output/
+  bin/  → GVCamSource.dll, GVCamHost.exe (Windows only)
+  lib/  → gvcam_core, gvcam_compat
+```
+
+### `conan create` — packaging (→ Conan cache)
+
+```bash
+# Native Linux
+conan create . -s build_type=Release
+
+# Cross-compile Linux → Windows
+export WIN_SDK_ROOT=/mnt/data/windows-dev-debug
+conan create . -pr:h toolchain/windows-x64-cross.profile -pr:b default
+```
+
+### Bare CMake (cross-compile only)
+
+```bash
+export WIN_SDK_ROOT=/mnt/data/windows-dev-debug
+cmake -B build/win11 -G Ninja \
+    -DCMAKE_TOOLCHAIN_FILE=toolchain/windows-x64-clang.cmake
+cmake --build build/win11
+```
+
+### Switching build type
+
+`conan build` and `conan create` share the same `build/` layout. When switching between them (or changing profiles / build_type), clean first:
+
+```bash
+rm -rf build/ output/
+```
+
+### toolchain/ directory
+
+| File | Purpose |
+|---|---|
+| `windows-x64-clang.cmake` | Cross-compile toolchain; reads `$WIN_SDK_ROOT` from env |
+| `windows-x64-cross.profile` | Conan host profile for Windows target |
 
 ## Source Tree
 
@@ -53,6 +106,7 @@ src/
 
 ## Testing
 
-- Cross-compile verification: `cmake --build build/win11` produces `GVCamHost.exe` + `GVCamSource.dll` (PE32+ x86-64)
-- Unit tests: `src/common/` can be natively compiled on Linux with `gcc -std=c11 -Isrc/common -Isrc/compat test.c src/common/frame.c src/common/color_convert.c`
+- Build verification: `conan build . -s build_type=Release` (native) or cross-compile
+- Cross-compile verification: check `file output/bin/*` shows `PE32+` for Windows artifacts
+- Unit tests: `gcc -std=c11 -Isrc/common test.c src/common/frame.c src/common/color_convert.c`
 - Runtime tests require Windows 11 22H2+ with Administrator privileges

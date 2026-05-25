@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout
 
@@ -41,6 +44,10 @@ class GVCamConan(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        out = os.path.join(self.source_folder, "output")
+        subprocess.run(
+            ["cmake", "--install", str(self.build_folder), "--prefix", out],
+            check=False)
 
     def package(self):
         cmake = CMake(self)

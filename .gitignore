@@ -1,0 +1,5 @@
+build/
+output/
+compile_commands.json
+CMakeUserPresets.json
+CMakePresets.json
