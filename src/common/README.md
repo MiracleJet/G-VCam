@@ -1,8 +1,8 @@
-# src/common — Platform-Independent Libraries
+# src/common — Platform-Independent Core
 
-C11, no external dependencies.
+C11, zero external dependencies.
 
-| Library | Sources | Purpose |
-|---|---|---|
-| `gvcam_core` | `frame.c`, `color_convert.c` | Frame buffer sizing, BGR→NV12/YUY2/I420 conversion |
-| `gvcam_codec` | `mjpeg_parser.c`, `jpeg_decoder.c` | MJPEG/JPEG decoding (requires libjpeg-turbo, optional) |
+| File | Purpose |
+|---|---|
+| `frame.h` / `frame.c` | Frame descriptor (`gvcam_frame_desc_t`), pixel formats, buffer sizing |
+| `color_convert.h` / `color_convert.c` | BGR→NV12/YUY2/I420 color-space conversion (BT.601) |

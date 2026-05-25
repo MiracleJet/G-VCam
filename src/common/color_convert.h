@@ -3,7 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include "gvcam/frame.h"
+#include "frame.h"
 
 #ifdef __cplusplus
 extern "C" {

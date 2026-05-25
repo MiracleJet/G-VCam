@@ -1,4 +1,4 @@
-#include "gvcam/frame.h"
+#include "frame.h"
 
 int gvcam_pixel_format_bpp(gvcam_pixel_format_t fmt)
 {

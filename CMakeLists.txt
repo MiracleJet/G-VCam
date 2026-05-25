@@ -11,22 +11,36 @@ set(CMAKE_CXX_STANDARD 17)
 option(GVCAM_WITH_OPENCV   "Use OpenCV for color conversion" OFF)
 option(BUILD_IMPL_WINDOWS  "Build Windows virtual camera driver" ON)
 
-# Note: libjpeg-turbo is optional — required only for gvcam_codec (MJPEG/JPEG).
-# Install via Conan or system package manager to enable it.
-
-# ── Public headers ───────────────────────────────────────────
-add_library(gvcam_headers INTERFACE)
-target_include_directories(gvcam_headers INTERFACE
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/include
-)
-
-# ── Common library (platform-independent) ────────────────────
+# ── Common library (platform-independent, zero deps) ─────────
 add_subdirectory(src/common)
 
-# ── Compat library (platform abstraction) ────────────────────
+# ── Codec library (MJPEG/JPEG, optional turbojpeg) ───────────
+add_subdirectory(src/codec)
+
+# ── Compat library (platform IPC) ────────────────────────────
 add_subdirectory(src/compat)
 
 # ── Platform implementations ─────────────────────────────────
 if(BUILD_IMPL_WINDOWS)
     add_subdirectory(src/impl/win11)
+endif()
+
+# ── Install ──────────────────────────────────────────────────
+include(GNUInstallDirs)
+
+install(TARGETS gvcam_core gvcam_compat
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+if(TARGET gvcam_codec)
+    install(TARGETS gvcam_codec
+        ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
+endif()
+
+if(BUILD_IMPL_WINDOWS)
+    install(TARGETS GVCamSource GVCamHost
+        RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    )
 endif()

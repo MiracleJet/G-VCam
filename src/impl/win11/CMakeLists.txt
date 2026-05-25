@@ -26,7 +26,6 @@ set(COMMON_INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     "${WIN_SDK_INC}"
     "${WIN_SDK_SHARED}"
-    ${CMAKE_SOURCE_DIR}/src/compat    # for ipc_windows.h internal header
 )
 
 # ── GVCamSource.dll — Virtual Camera COM DLL ────────────────

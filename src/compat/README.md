@@ -1,8 +1,7 @@
-# src/compat — Platform IPC Implementations
+# src/compat — Platform IPC
 
-Internal headers and platform-specific IPC backends. Not installed.
-
-| File | Platform | Purpose |
-|---|---|---|
-| `ipc_windows.c` / `ipc_windows.h` | Windows | Shared memory + mutex via `Global\` namespace |
-| `ipc_posix.c` | Linux/macOS | (future) POSIX shared memory |
+| File | Purpose |
+|---|---|
+| `ipc.h` | Shared IPC API (`gvcam_ipc_t`), included by both platform backends |
+| `windows/ipc.c` | Windows shared-memory + mutex via `Global\` namespace |
+| `posix/ipc.c` | POSIX stub (future: shm_open) |

@@ -17,10 +17,12 @@ Architecture: **Phone (MJPEG server) → TCP → Companion (decode/convert) → 
 
 ```
 src/
-  include/gvcam/    — public headers (frame.h, ipc.h); pure C, no platform deps
-  common/            — gvcam_core (frame.c, color_convert.c — no deps)
-                       gvcam_codec (mjpeg_parser.c, jpeg_decoder.c — needs turbojpeg, optional)
-  compat/            — platform IPC (ipc_windows.c, future ipc_posix.c)
+  common/            — gvcam_core (frame.h/c, color_convert.h/c); C11, zero deps
+  codec/             — gvcam_codec (mjpeg_parser, jpeg_decoder); optional turbojpeg
+  compat/            — gvcam_compat
+      ipc.h          — shared IPC API
+      windows/ipc.c  — Windows shared-memory + mutex
+      posix/ipc.c    — POSIX stubs
   impl/win11/        — Windows 11 virtual camera driver (C++/WRL, COM)
   export/            — .def files for DLL symbol exports
   app/               — phone-side camera apps (future)
@@ -35,7 +37,7 @@ src/
 
 ## Key Design Rules
 
-- **IPC struct (`gvcam_ipc_t`) is opaque** — full definition only in `compat/ipc_windows.h` (internal, not installed). Consumers store a pointer.
+- **IPC struct (`gvcam_ipc_t`) is opaque** — full definition only in each platform's `ipc.c` (internal). Consumers store a pointer.
 - **Frame descriptor layout** is `GVCAM_FRAME_DESC_SIZE` bytes (computed via sizeof). Producer and consumer must agree.
 - **IPC channel names**: Windows uses `Global\` prefix for cross-session visibility.
 - **COM CLSID**: `{C8D7E3A1-5BC9-4E92-98F3-2A4D6E8B1C7F}` — generated for GVCam, do not reuse.
@@ -52,5 +54,5 @@ src/
 ## Testing
 
 - Cross-compile verification: `cmake --build build/win11` produces `GVCamHost.exe` + `GVCamSource.dll` (PE32+ x86-64)
-- Unit tests: `src/common/` can be natively compiled on Linux with `gcc -std=c11 -Isrc/include -Isrc/common test.c src/common/frame.c src/common/color_convert.c`
+- Unit tests: `src/common/` can be natively compiled on Linux with `gcc -std=c11 -Isrc/common -Isrc/compat test.c src/common/frame.c src/common/color_convert.c`
 - Runtime tests require Windows 11 22H2+ with Administrator privileges

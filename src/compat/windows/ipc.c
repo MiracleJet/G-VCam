@@ -5,7 +5,7 @@
  * (where mfpmp.exe loads the virtual camera DLL) and the user session
  * (where the companion process runs).
  */
-#include "gvcam/ipc.h"
+#include "../ipc.h"
 
 #include <windows.h>
 #include <stdlib.h>
