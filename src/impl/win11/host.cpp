@@ -18,10 +18,66 @@
 using Microsoft::WRL::ComPtr;
 
 static const WCHAR* SOURCE_CLSID = L"{C8D7E3A1-5BC9-4E92-98F3-2A4D6E8B1C7F}";
+static WCHAR g_dllPath[MAX_PATH];
+
+typedef HRESULT (STDAPICALLTYPE *RegisterFn)(void);
+
+static HRESULT SelfRegister()
+{
+    WCHAR exePath[MAX_PATH];
+    DWORD len = GetModuleFileNameW(NULL, exePath, MAX_PATH);
+    if (len == 0 || len >= MAX_PATH) return E_FAIL;
+
+    WCHAR *lastSep = wcsrchr(exePath, L'\\');
+    if (!lastSep) return E_FAIL;
+    *(lastSep + 1) = L'\0';
+    wcscpy_s(g_dllPath, MAX_PATH, exePath);
+    wcscat_s(g_dllPath, MAX_PATH, L"GVCamSource.dll");
+
+    HMODULE dll = LoadLibraryW(g_dllPath);
+    if (!dll) {
+        printf("[WARN]  Cannot load %ls (error %lu)\n", g_dllPath, GetLastError());
+        return E_FAIL;
+    }
+
+    RegisterFn fn = (RegisterFn)GetProcAddress(dll, "DllRegisterServer");
+    HRESULT hr = E_FAIL;
+    if (fn) {
+        hr = fn();
+        if (SUCCEEDED(hr))
+            printf("[OK]   Registered %ls\n", g_dllPath);
+        else
+            printf("[WARN] DllRegisterServer failed: 0x%08lX\n", (long)hr);
+    } else {
+        printf("[WARN] DllRegisterServer not found\n");
+    }
+
+    FreeLibrary(dll);
+    return hr;
+}
+
+static void SelfUnregister()
+{
+    if (g_dllPath[0] == L'\0') return;
+
+    HMODULE dll = LoadLibraryW(g_dllPath);
+    if (!dll) return;
+
+    RegisterFn fn = (RegisterFn)GetProcAddress(dll, "DllUnregisterServer");
+    if (fn) {
+        fn();
+        printf("[OK]   Unregistered %ls\n", g_dllPath);
+    }
+
+    FreeLibrary(dll);
+}
 
 int wmain()
 {
     printf("[GVCam] Initializing Virtual Camera Host...\n");
+
+    printf("[GVCam] Auto-registering GVCamSource.dll ...\n");
+    SelfRegister();
 
     HRESULT hr = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     if (FAILED(hr)) { printf("[ERROR] CoInitializeEx: 0x%08lX\n", (long)hr); return 1; }
@@ -51,7 +107,8 @@ int wmain()
 
     if (FAILED(hr)) {
         printf("[ERROR] MFCreateVirtualCamera: 0x%08lX\n", (long)hr);
-        printf("        Did you run 'regsvr32 GVCamSource.dll' as Administrator?\n");
+        printf("        Ensure GVCamSource.dll is in the same directory "
+               "and you are running as Administrator.\n");
         MFShutdown();
         CoUninitialize();
         return 1;
@@ -85,5 +142,7 @@ int wmain()
 
     MFShutdown();
     CoUninitialize();
+
+    SelfUnregister();
     return 0;
 }
