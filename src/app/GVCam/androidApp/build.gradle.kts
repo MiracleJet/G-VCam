@@ -8,14 +8,16 @@ plugins {
 
 kotlin {
     compilerOptions {
-        jvmTarget = JvmTarget.JVM_11
+        jvmTarget = JvmTarget.JVM_17
     }
 }
+
 dependencies {
     implementation(projects.shared)
-
     implementation(libs.androidx.activity.compose)
-
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.viewmodelCompose)
+    implementation(libs.camerax.view)
     implementation(libs.compose.uiToolingPreview)
     debugImplementation(libs.compose.uiTooling)
 }
@@ -42,7 +44,7 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 }
