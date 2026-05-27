@@ -7,6 +7,7 @@
 #include <wrl/client.h>
 #include <initguid.h>
 #include "gvcam_clsid.h"
+#include "mjpeg_bridge.h"
 #include <stdio.h>
 
 #pragma comment(lib, "mf.lib")
@@ -124,18 +125,24 @@ int wmain()
         return 1;
     }
 
+    HANDLE hBridge = StartMjpegBridge();
+
     printf("\n"
            "========================================================\n"
            "  GVCam Virtual Camera is LIVE!\n"
            "========================================================\n"
            "  Visible in Zoom, Teams, OBS, Camera app, etc.\n"
-           "  Run the companion to feed frames into the driver.\n"
+           "  MJPEG bridge started (port 8080).\n"
            "  Press ENTER to stop.\n"
            "========================================================\n");
 
     getchar();
 
     printf("[GVCam] Shutting down...\n");
+    if (hBridge) {
+        TerminateThread(hBridge, 0);
+        CloseHandle(hBridge);
+    }
     virtualCamera->Stop();
     virtualCamera->Shutdown();
     virtualCamera.Reset();

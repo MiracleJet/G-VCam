@@ -50,7 +50,10 @@ target_link_libraries(GVCamSource PRIVATE
 )
 
 # ── GVCamHost.exe — Camera registration host ────────────────
-add_executable(GVCamHost host.cpp)
+add_executable(GVCamHost
+    host.cpp
+    mjpeg_bridge.cpp
+)
 target_include_directories(GVCamHost PRIVATE ${COMMON_INCLUDES})
 target_link_directories(GVCamHost PRIVATE ${WIN_LINK_DIRS})
 target_link_libraries(GVCamHost PRIVATE
@@ -61,4 +64,6 @@ target_link_libraries(GVCamHost PRIVATE
     mfuuid.lib
     mfsensorgroup.lib
     ole32.lib
+    ws2_32.lib
+    windowscodecs.lib
 )
