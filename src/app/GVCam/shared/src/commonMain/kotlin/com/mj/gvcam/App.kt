@@ -95,13 +95,13 @@ fun App(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Button(
-                    onClick = { viewModel.startServer() },
+                    onClick = { viewModel.start() },
                     enabled = !state.isServerRunning,
                     modifier = Modifier.weight(1f)
                 ) { Text("Start Server") }
 
                 Button(
-                    onClick = { viewModel.stopAll() },
+                    onClick = { viewModel.stop() },
                     enabled = state.isServerRunning,
                     modifier = Modifier.weight(1f),
                     colors = ButtonDefaults.buttonColors(

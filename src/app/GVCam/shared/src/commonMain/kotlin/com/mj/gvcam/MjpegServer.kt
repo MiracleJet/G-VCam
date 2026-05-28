@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicReference
 
 class MjpegServer(private val port: Int = 8080) {
 
-    private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
+    private var scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private var serverSocket: ServerSocket? = null
     private val clients = CopyOnWriteArrayList<Socket>()
     private val clientStreams = mutableMapOf<Socket, BufferedOutputStream>()
@@ -27,6 +27,7 @@ class MjpegServer(private val port: Int = 8080) {
     fun start() {
         if (running) return
         running = true
+        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
         scope.launch {
             try {
