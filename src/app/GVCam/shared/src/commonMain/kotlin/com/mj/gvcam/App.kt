@@ -60,6 +60,13 @@ fun App(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
+                        Text("Device IP")
+                        Text(state.deviceIp.ifEmpty { "(unknown)" })
+                    }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text("Port")
                         Text(state.port.toString())
                     }

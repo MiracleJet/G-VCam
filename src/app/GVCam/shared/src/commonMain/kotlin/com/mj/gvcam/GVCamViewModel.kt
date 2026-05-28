@@ -15,6 +15,7 @@ data class AppUiState(
     val frameCount: Long = 0,
     val clientCount: Int = 0,
     val port: Int = 8080,
+    val deviceIp: String = "",
     val resolution: String = "1920x1080",
     val quality: Int = 55
 )
@@ -32,6 +33,10 @@ class GVCamViewModel : ViewModel() {
     val server = MjpegServer(8080)
     var cameraController: CameraController? = null
     private var statsJob: Job? = null
+
+    fun setDeviceIp(ip: String) {
+        _uiState.value = _uiState.value.copy(deviceIp = ip)
+    }
 
     fun onFrame(jpeg: ByteArray) {
         server.sendFrame(jpeg)

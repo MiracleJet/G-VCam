@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
+import java.net.NetworkInterface
 
 class MainActivity : ComponentActivity() {
 
@@ -41,12 +42,15 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        val deviceIp = getWifiIp()
+
         setContent {
             val viewModel = viewModel<GVCamViewModel>(viewModelStoreOwner = this@MainActivity)
             val context = this@MainActivity
             val lifecycleOwner = LocalLifecycleOwner.current
 
             LaunchedEffect(Unit) {
+                viewModel.setDeviceIp(deviceIp)
                 viewModel.cameraController = object : CameraController {
                     override suspend fun start(): Boolean {
                         if (cameraSource != null) return true
@@ -75,4 +79,15 @@ class MainActivity : ComponentActivity() {
             )
         }
     }
+}
+
+private fun getWifiIp(): String {
+    return try {
+        NetworkInterface.getNetworkInterfaces()?.asSequence()
+            ?.flatMap { it.inetAddresses.asSequence() }
+            ?.firstOrNull { addr ->
+                !addr.isLoopbackAddress && addr.hostAddress?.contains(':') == false
+            }
+            ?.hostAddress ?: ""
+    } catch (_: Exception) { "" }
 }

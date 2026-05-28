@@ -73,9 +73,18 @@ static void SelfUnregister()
     FreeLibrary(dll);
 }
 
-int wmain()
+int wmain(int argc, wchar_t *argv[])
 {
     printf("[GVCam] Initializing Virtual Camera Host...\n");
+
+    const char *androidIp = "127.0.0.1";
+    if (argc >= 2) {
+        // Convert wide-char argument to ANSI
+        static char ipBuf[64];
+        WideCharToMultiByte(CP_ACP, 0, argv[1], -1, ipBuf, sizeof(ipBuf), nullptr, nullptr);
+        androidIp = ipBuf;
+    }
+    printf("[GVCam] Android IP: %s\n", androidIp);
 
     printf("[GVCam] Auto-registering GVCamSource.dll ...\n");
     SelfRegister();
@@ -125,7 +134,7 @@ int wmain()
         return 1;
     }
 
-    HANDLE hBridge = StartMjpegBridge();
+    HANDLE hBridge = StartMjpegBridge(androidIp);
 
     printf("\n"
            "========================================================\n"

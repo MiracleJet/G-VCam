@@ -89,7 +89,7 @@ bool WicDecodeJpeg(const uint8_t *jpeg, size_t len,
 
 // --- Winsock TCP client -----------------------------------------------
 
-SOCKET ConnectToAndroid()
+SOCKET ConnectToAndroid(const char *host)
 {
     SOCKET sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock == INVALID_SOCKET) return INVALID_SOCKET;
@@ -97,7 +97,7 @@ SOCKET ConnectToAndroid()
     sockaddr_in addr{};
     addr.sin_family = AF_INET;
     addr.sin_port   = htons(8080);
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+    inet_pton(AF_INET, host, &addr.sin_addr);
 
     if (connect(sock, (sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR) {
         closesocket(sock);
@@ -106,9 +106,11 @@ SOCKET ConnectToAndroid()
     return sock;
 }
 
-bool SendHttpRequest(SOCKET sock)
+bool SendHttpRequest(SOCKET sock, const char *host)
 {
-    const char *req = "GET / HTTP/1.0\r\nHost: 127.0.0.1\r\n\r\n";
+    char req[256];
+    snprintf(req, sizeof(req),
+             "GET / HTTP/1.0\r\nHost: %s\r\n\r\n", host);
     return send(sock, req, (int)strlen(req), 0) != SOCKET_ERROR;
 }
 
@@ -195,11 +197,14 @@ bool OpenSharedMemory(SharedMemGuard &g, DWORD totalSize)
 
 // --- Public API -------------------------------------------------------
 
-HANDLE StartMjpegBridge()
+HANDLE StartMjpegBridge(const char *host)
 {
-    GVCamLog("StartMjpegBridge: initializing");
+    GVCamLog("StartMjpegBridge: initializing, host=%s", host);
 
-    HANDLE hThread = CreateThread(nullptr, 0, [](LPVOID) -> DWORD {
+    char *hostParam = _strdup(host);
+
+    HANDLE hThread = CreateThread(nullptr, 0, [](LPVOID p) -> DWORD {
+        char *host = static_cast<char *>(p);
         printf("[BRIDGE] Thread started\n");
         fflush(stdout);
 
@@ -238,8 +243,8 @@ HANDLE StartMjpegBridge()
         printf("[BRIDGE] Connecting to TCP 8080...\n");
         fflush(stdout);
         while (true) {
-            sock = ConnectToAndroid();
-            if (sock != INVALID_SOCKET && SendHttpRequest(sock)) {
+            sock = ConnectToAndroid(host);
+            if (sock != INVALID_SOCKET && SendHttpRequest(sock, host)) {
                 if (SkipResponseHeaders(sock, boundary)) break;
                 closesocket(sock);
                 sock = INVALID_SOCKET;
@@ -367,8 +372,9 @@ HANDLE StartMjpegBridge()
         closesocket(sock);
         WSACleanup();
         CoUninitialize();
+        free(host);
         return 0;
-    }, nullptr, 0, nullptr);
+    }, hostParam, 0, nullptr);
 
     return hThread;
 }
